@@ -25,9 +25,11 @@ Node toolchain. Everything builds in **GitHub Actions**:
 - **`fork-build.yml`** — sanity build on every push to `main` (and manual dispatch).
   Builds the Windows installer with the base `tauri.conf.json` (unsigned, no
   updater). Use this to confirm a change compiles.
-- **`fork-release.yml`** — builds and publishes a GitHub Release. Triggered by
-  pushing a `v*` tag, or manually via **Actions → Fork release → Run workflow**
-  with a version like `v0.15.10-fork.1`.
+- **`fork-release.yml`** — builds the standalone `Modrinth App.exe` (`--no-bundle`,
+  no installer) and publishes it as a GitHub Release asset. Triggered by pushing a
+  `v*` tag, or manually via **Actions → Fork release → Run workflow** with a version
+  like `v0.15.10-fork.1`. To install: close Modrinth and drop the exe into
+  `%LOCALAPPDATA%\Modrinth App\`.
 - **`fork-sync.yml`** — scheduled daily. Only acts when Modrinth publishes a
   **new release**; then it merges that release tag into `main` and pushes a
   `v<upstream>-fork` tag to trigger a release.

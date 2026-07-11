@@ -70,8 +70,23 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - name: Build Windows app (unsigned NSIS, no updater)
-        run: pnpm --filter=@modrinth/app run tauri build --bundles nsis
+      - name: Build standalone Windows exe (no installer)
+        run: pnpm --filter=@modrinth/app run tauri build --no-bundle
+
+      - name: Collect standalone exe
+        shell: bash
+        run: |
+          mkdir -p dist
+          if [ -f "target/release/Modrinth App.exe" ]; then
+            cp "target/release/Modrinth App.exe" "dist/Modrinth App.exe"
+          elif [ -f "target/release/theseus_gui.exe" ]; then
+            cp "target/release/theseus_gui.exe" "dist/Modrinth App.exe"
+          else
+            echo "Could not find the built executable in target/release:" >&2
+            ls -la target/release/*.exe >&2 || true
+            exit 1
+          fi
+          ls -la "dist/Modrinth App.exe"
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
@@ -80,4 +95,4 @@ jobs:
           name: PatchedModrinth ${{ steps.version.outputs.tag }}
           generate_release_notes: true
           files: |
-            target/release/bundle/nsis/*-setup.exe
+            dist/Modrinth App.exe
