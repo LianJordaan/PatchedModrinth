@@ -32,6 +32,20 @@ Node toolchain. Everything builds in **GitHub Actions**:
   **new release**; then it merges that release tag into `main` and pushes a
   `v<upstream>-fork` tag to trigger a release.
 
+### Inherited upstream workflows (removed)
+
+Modrinth's own workflows (`turbo-ci`, `theseus-build`/`theseus-release`,
+`frontend-deploy`/`frontend-preview`, `labrinth-docker`, `daedalus-docker`,
+`prepare-pnpm-cache`, `i18n-*`, `api-client-release`, etc.) were **deleted** from
+the fork. They request private **Blacksmith** runners (`blacksmith-*`) and
+Modrinth-only secrets, so on a fork they queue forever ("waiting for a runner")
+or fail red on every push. Only `fork-build`, `fork-release`, and `fork-sync`
+remain.
+
+If an upstream release edits one of those deleted files, `fork-sync` will hit a
+modify/delete conflict and open an issue — resolve it by keeping the file
+deleted (`git rm <file>`) and pushing `main`.
+
 ## Cutting a release manually
 
 1. **Actions → Fork release → Run workflow**, enter a version (e.g. `v0.15.10-fork.1`), or
