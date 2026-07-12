@@ -346,6 +346,7 @@ fn main() {
                         "fork_apply_update",
                         "fork_uninstall",
                         "set_hosting_webview",
+                        "reload_hosting_webview",
                     ])
                     .default_permission(
                         DefaultPermissionRule::AllowAllCommands,

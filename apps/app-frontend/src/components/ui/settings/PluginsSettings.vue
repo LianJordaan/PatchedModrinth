@@ -129,6 +129,21 @@ async function uninstall() {
 		confirmingUninstall.value = false
 	}
 }
+
+const DEFAULT_HOSTING_URL = 'https://panel.bytebuilders.co.za'
+const hostingUrl = ref<string>(localStorage.getItem('bytelauncher-hosting-url') ?? '')
+
+function saveHostingUrl() {
+	const value = hostingUrl.value.trim()
+	if (value) {
+		localStorage.setItem('bytelauncher-hosting-url', value)
+	} else {
+		localStorage.removeItem('bytelauncher-hosting-url')
+	}
+	invoke('plugin:addons|reload_hosting_webview', {
+		url: value || DEFAULT_HOSTING_URL,
+	}).catch(() => {})
+}
 </script>
 
 <template>
@@ -163,6 +178,22 @@ async function uninstall() {
 					</button>
 				</ButtonStyled>
 			</div>
+		</div>
+		<div>
+			<h2 class="m-0 text-lg font-semibold text-contrast">ByteBuilders Hosting</h2>
+			<p class="m-0 mt-1 text-sm">
+				The panel shown on the Hosting page. Leave empty to use the default ByteBuilders panel
+				(<code>panel.bytebuilders.co.za</code>). Handy if you run a private panel.
+			</p>
+			<input
+				v-model="hostingUrl"
+				type="url"
+				spellcheck="false"
+				placeholder="https://panel.bytebuilders.co.za"
+				class="mt-2 w-full rounded-lg border border-solid border-surface-5 bg-surface-1 px-3 py-2 text-sm text-contrast outline-none focus:border-brand"
+				@change="saveHostingUrl"
+				@blur="saveHostingUrl"
+			/>
 		</div>
 		<div class="flex items-center justify-between gap-4">
 			<div>

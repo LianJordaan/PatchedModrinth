@@ -1,18 +1,24 @@
 <script setup lang="ts">
+import { useModalStack } from '@modrinth/ui'
 import { invoke } from '@tauri-apps/api/core'
 import { openUrl } from '@tauri-apps/plugin-opener'
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
-const PANEL_URL = 'https://panel.bytebuilders.co.za'
+const DEFAULT_URL = 'https://panel.bytebuilders.co.za'
+// Custom panel URL (Settings -> Plugins). Empty falls back to the default.
+const panelUrl = () => localStorage.getItem('bytelauncher-hosting-url')?.trim() || DEFAULT_URL
+
 const container = ref<HTMLElement | null>(null)
+const { hasModal } = useModalStack()
 let resizeObserver: ResizeObserver | null = null
 
-// The panel blocks <iframe> embedding (X-Frame-Options: DENY), so instead the
-// backend renders it in a native child webview positioned exactly over the
-// `container` element below. We just keep the backend informed of its bounds.
+// The panel blocks <iframe> embedding (X-Frame-Options: DENY), so the backend
+// renders it in a native child webview positioned exactly over `container`.
 function show() {
 	const el = container.value
-	if (!el) return
+	// A native webview always paints above HTML, so keep it hidden while a modal
+	// is open — otherwise it would cover the modal.
+	if (!el || hasModal.value) return
 	const r = el.getBoundingClientRect()
 	const dpr = window.devicePixelRatio || 1
 	invoke('plugin:addons|set_hosting_webview', {
@@ -21,6 +27,7 @@ function show() {
 		y: r.top * dpr,
 		width: r.width * dpr,
 		height: r.height * dpr,
+		url: panelUrl(),
 	}).catch((e) => console.error('[hosting] failed to show panel webview', e))
 }
 
@@ -31,8 +38,11 @@ function hide() {
 		y: 0,
 		width: 0,
 		height: 0,
+		url: panelUrl(),
 	}).catch(() => {})
 }
+
+watch(hasModal, (open) => (open ? hide() : show()))
 
 onMounted(() => {
 	requestAnimationFrame(show)
@@ -56,7 +66,7 @@ onBeforeUnmount(() => {
 			<span class="text-sm font-semibold text-contrast">ByteBuilders Hosting</span>
 			<button
 				class="cursor-pointer border-none bg-transparent text-sm font-semibold text-brand hover:underline"
-				@click="openUrl(PANEL_URL)"
+				@click="openUrl(panelUrl())"
 			>
 				Open in browser ↗
 			</button>

@@ -24,6 +24,7 @@ pub fn init<R: tauri::Runtime>() -> TauriPlugin<R> {
             fork_apply_update,
             fork_uninstall,
             set_hosting_webview,
+            reload_hosting_webview,
         ])
         .build()
 }
@@ -302,12 +303,25 @@ pub async fn fork_uninstall<R: tauri::Runtime>(
     Ok(())
 }
 
+const HOSTING_WEBVIEW_LABEL: &str = "hosting-webview";
+const DEFAULT_HOSTING_URL: &str = "https://panel.bytebuilders.co.za";
+
+/// Parses a user-supplied hosting URL, accepting only http/https and falling
+/// back to the default ByteBuilders panel for anything empty or unsupported.
+fn parse_hosting_url(raw: &str) -> url::Url {
+    url::Url::parse(raw.trim())
+        .ok()
+        .filter(|u| matches!(u.scheme(), "http" | "https"))
+        .unwrap_or_else(|| url::Url::parse(DEFAULT_HOSTING_URL).unwrap())
+}
+
 /// Shows or hides the ByteBuilders hosting panel as a **native child webview**
 /// positioned over the hosting page's content area. Rendering the panel in a
-/// real webview (rather than an `<iframe>`) makes it a top-level document, so
-/// the panel's `X-Frame-Options`/`frame-ancestors` restrictions don't apply and
-/// it renders with no changes needed on the panel side. Bounds are physical
-/// pixels supplied by the frontend (`getBoundingClientRect()` × devicePixelRatio).
+/// real webview (rather than an `<iframe>`) makes it a top-level document, so the
+/// panel's `X-Frame-Options`/`frame-ancestors` restrictions don't apply and it
+/// renders with no changes on the panel side. `url` is the (optional, custom)
+/// panel URL, applied only when the webview is first created; bounds are physical
+/// pixels from the frontend (`getBoundingClientRect()` × devicePixelRatio).
 #[tauri::command]
 pub async fn set_hosting_webview<R: tauri::Runtime>(
     app: tauri::AppHandle<R>,
@@ -316,14 +330,12 @@ pub async fn set_hosting_webview<R: tauri::Runtime>(
     y: f64,
     width: f64,
     height: f64,
+    url: String,
 ) -> crate::api::Result<()> {
     use tauri::{Manager, PhysicalPosition, PhysicalSize, WebviewUrl};
 
-    const HOSTING_URL: &str = "https://panel.bytebuilders.co.za";
-    const LABEL: &str = "hosting-webview";
-
     if !visible {
-        if let Some(webview) = app.webviews().get(LABEL) {
+        if let Some(webview) = app.webviews().get(HOSTING_WEBVIEW_LABEL) {
             webview.hide().ok();
             webview
                 .set_position(PhysicalPosition::new(-4000.0, -4000.0))
@@ -335,15 +347,15 @@ pub async fn set_hosting_webview<R: tauri::Runtime>(
     let position = PhysicalPosition::new(x, y);
     let size = PhysicalSize::new(width.max(1.0), height.max(1.0));
 
-    if let Some(webview) = app.webviews().get(LABEL) {
+    if let Some(webview) = app.webviews().get(HOSTING_WEBVIEW_LABEL) {
         webview.set_position(position).ok();
         webview.set_size(size).ok();
         webview.show().ok();
     } else if let Some(window) = app.get_window("main") {
         let webview = window.add_child(
             tauri::webview::WebviewBuilder::new(
-                LABEL,
-                WebviewUrl::External(HOSTING_URL.parse().unwrap()),
+                HOSTING_WEBVIEW_LABEL,
+                WebviewUrl::External(parse_hosting_url(&url)),
             ),
             position,
             size,
@@ -351,6 +363,21 @@ pub async fn set_hosting_webview<R: tauri::Runtime>(
         webview.show().ok();
     }
 
+    Ok(())
+}
+
+/// Navigates the existing hosting webview to a new URL (used when the user
+/// changes the custom panel URL in settings), so the change takes effect without
+/// having to leave and return to the page.
+#[tauri::command]
+pub async fn reload_hosting_webview<R: tauri::Runtime>(
+    app: tauri::AppHandle<R>,
+    url: String,
+) -> crate::api::Result<()> {
+    use tauri::Manager;
+    if let Some(webview) = app.webviews().get(HOSTING_WEBVIEW_LABEL) {
+        webview.navigate(parse_hosting_url(&url)).ok();
+    }
     Ok(())
 }
 
