@@ -124,7 +124,7 @@
 								color="brand"
 								size="large"
 							>
-								<button @click="startInstance('InstancePage')">
+								<button :disabled="loading" @click="startInstance('InstancePage')">
 									<PlayIcon />
 									Play
 								</button>
