@@ -344,6 +344,8 @@ fn main() {
                         "set_plugin_enabled",
                         "get_plugins_dir",
                         "fork_apply_update",
+                        "fork_uninstall",
+                        "set_hosting_webview",
                     ])
                     .default_permission(
                         DefaultPermissionRule::AllowAllCommands,

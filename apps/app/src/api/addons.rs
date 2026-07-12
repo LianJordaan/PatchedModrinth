@@ -23,6 +23,7 @@ pub fn init<R: tauri::Runtime>() -> TauriPlugin<R> {
             get_plugins_dir,
             fork_apply_update,
             fork_uninstall,
+            set_hosting_webview,
         ])
         .build()
 }
@@ -297,6 +298,58 @@ pub async fn fork_uninstall<R: tauri::Runtime>(
 
     // Quit so the uninstaller can replace the running executable.
     app.exit(0);
+
+    Ok(())
+}
+
+/// Shows or hides the ByteBuilders hosting panel as a **native child webview**
+/// positioned over the hosting page's content area. Rendering the panel in a
+/// real webview (rather than an `<iframe>`) makes it a top-level document, so
+/// the panel's `X-Frame-Options`/`frame-ancestors` restrictions don't apply and
+/// it renders with no changes needed on the panel side. Bounds are physical
+/// pixels supplied by the frontend (`getBoundingClientRect()` × devicePixelRatio).
+#[tauri::command]
+pub async fn set_hosting_webview<R: tauri::Runtime>(
+    app: tauri::AppHandle<R>,
+    visible: bool,
+    x: f64,
+    y: f64,
+    width: f64,
+    height: f64,
+) -> crate::api::Result<()> {
+    use tauri::{Manager, PhysicalPosition, PhysicalSize, WebviewUrl};
+
+    const HOSTING_URL: &str = "https://panel.bytebuilders.co.za";
+    const LABEL: &str = "hosting-webview";
+
+    if !visible {
+        if let Some(webview) = app.webviews().get(LABEL) {
+            webview.hide().ok();
+            webview
+                .set_position(PhysicalPosition::new(-4000.0, -4000.0))
+                .ok();
+        }
+        return Ok(());
+    }
+
+    let position = PhysicalPosition::new(x, y);
+    let size = PhysicalSize::new(width.max(1.0), height.max(1.0));
+
+    if let Some(webview) = app.webviews().get(LABEL) {
+        webview.set_position(position).ok();
+        webview.set_size(size).ok();
+        webview.show().ok();
+    } else if let Some(window) = app.get_window("main") {
+        let webview = window.add_child(
+            tauri::webview::WebviewBuilder::new(
+                LABEL,
+                WebviewUrl::External(HOSTING_URL.parse().unwrap()),
+            ),
+            position,
+            size,
+        )?;
+        webview.show().ok();
+    }
 
     Ok(())
 }
