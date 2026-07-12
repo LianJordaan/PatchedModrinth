@@ -369,18 +369,21 @@ async function setupApp() {
 	nativeDecorations.value = native_decorations
 	if (os.value !== 'MacOS') await getCurrentWindow().setDecorations(native_decorations)
 
-	// Fresh installs default to the ByteLauncher purple theme. Done here rather
-	// than via a DB migration because app.db is shared with the real Modrinth App,
-	// which must not see fork-only migrations. Only affects brand-new, not-yet-
-	// onboarded installs and never overrides a theme the user has already chosen.
+	// Default to the ByteLauncher purple theme the first time ByteLauncher runs
+	// (including when migrating from the Modrinth App), then remember it via a
+	// localStorage flag so we never override a theme the user later picks. Done
+	// here, not via a DB migration — app.db is shared with the real Modrinth App.
 	let effectiveTheme = theme
-	if (!onboarded && theme === 'dark') {
-		effectiveTheme = 'purple'
-		try {
-			const current = await getSettings()
-			await setSettings({ ...current, theme: 'purple' })
-		} catch (e) {
-			console.error('[theme] failed to persist default purple theme', e)
+	if (!localStorage.getItem('bytelauncher-theme-initialized')) {
+		localStorage.setItem('bytelauncher-theme-initialized', '1')
+		if (theme === 'dark') {
+			effectiveTheme = 'purple'
+			try {
+				const current = await getSettings()
+				await setSettings({ ...current, theme: 'purple' })
+			} catch (e) {
+				console.error('[theme] failed to persist default purple theme', e)
+			}
 		}
 	}
 
