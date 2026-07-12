@@ -33,7 +33,7 @@ export default new createRouter({
 			name: 'Servers',
 			component: Pages.Servers,
 			meta: {
-				breadcrumb: [{ name: 'Servers' }],
+				breadcrumb: [{ name: 'ByteBuilders Hosting' }],
 			},
 		},
 		{

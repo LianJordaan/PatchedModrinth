@@ -123,7 +123,7 @@ async function installUpdate() {
 			<div>
 				<h2 class="m-0 text-lg font-semibold text-contrast">App updates</h2>
 				<p class="m-0 mt-1 text-sm">
-					<span>You're on ByteLauncher v{{ currentVersion }}. </span>
+					<span>You're on ByteLauncher v{{ currentVersion }} (based on Modrinth {{ currentVersion.split('-fork')[0] }}). </span>
 					<span v-if="updateState === 'current'">You're up to date.</span>
 					<span v-else-if="updateState === 'available'"
 						>Update available: v{{ updateInfo?.version }}.</span

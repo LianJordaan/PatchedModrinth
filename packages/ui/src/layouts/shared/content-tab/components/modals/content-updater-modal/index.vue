@@ -569,7 +569,7 @@ function getBadgeClasses(version: Labrinth.Versions.v2.Version): string {
 	// Version type badges
 	switch (version.version_type) {
 		case 'release':
-			return 'bg-highlight-green border-brand text-brand'
+			return 'bg-brand-highlight border-brand text-brand'
 		case 'beta':
 			return 'bg-highlight-blue border-brand-blue text-brand-blue'
 		case 'alpha':
@@ -582,7 +582,7 @@ function getBadgeClasses(version: Labrinth.Versions.v2.Version): string {
 function getVersionTypeBadgeClasses(version: Labrinth.Versions.v2.Version): string {
 	switch (version.version_type) {
 		case 'release':
-			return 'bg-highlight-green border-brand text-brand'
+			return 'bg-brand-highlight border-brand text-brand'
 		case 'beta':
 			return 'bg-highlight-blue border-brand-blue text-brand-blue'
 		case 'alpha':
