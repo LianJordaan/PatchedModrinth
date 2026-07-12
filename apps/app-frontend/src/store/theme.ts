@@ -1,7 +1,5 @@
 import { defineStore } from 'pinia'
 
-let systemThemeMq: MediaQueryList | null = null
-
 export const DEFAULT_FEATURE_FLAGS = {
 	project_background: false,
 	page_path: false,
@@ -19,7 +17,7 @@ export const DEFAULT_FEATURE_FLAGS = {
 	advanced_filters_collapsed: true,
 }
 
-export const THEME_OPTIONS = ['dark', 'light', 'oled', 'system'] as const
+export const THEME_OPTIONS = ['purple', 'light', 'dark', 'oled'] as const
 
 export type FeatureFlag = keyof typeof DEFAULT_FEATURE_FLAGS
 export type FeatureFlags = Record<FeatureFlag, boolean>
@@ -36,7 +34,7 @@ export type ThemeStore = {
 }
 
 export const DEFAULT_THEME_STORE: ThemeStore = {
-	selectedTheme: 'dark',
+	selectedTheme: 'purple',
 	advancedRendering: true,
 	hideNametagSkinsPage: false,
 	toggleSidebar: false,
@@ -62,18 +60,7 @@ export const useTheming = defineStore('themeStore', {
 			for (const theme of THEME_OPTIONS) {
 				html.classList.remove(`${theme}-mode`)
 			}
-
-			systemThemeMq?.removeEventListener('change', this.setThemeClass)
-			systemThemeMq = null
-
-			let theme = this.selectedTheme
-			if (this.selectedTheme === 'system') {
-				systemThemeMq = window.matchMedia('(prefers-color-scheme: dark)')
-				systemThemeMq.addEventListener('change', this.setThemeClass)
-				theme = systemThemeMq.matches ? 'dark' : 'light'
-			}
-
-			html.classList.add(`${theme}-mode`)
+			html.classList.add(`${this.selectedTheme}-mode`)
 		},
 		getFeatureFlag(key: FeatureFlag) {
 			return this.featureFlags[key] ?? DEFAULT_FEATURE_FLAGS[key]

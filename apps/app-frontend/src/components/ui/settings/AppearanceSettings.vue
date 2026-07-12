@@ -147,7 +147,7 @@ watch(
 		"
 		:current-theme="settings.theme"
 		:theme-options="themeStore.getThemeOptions()"
-		system-theme-color="system"
+		system-theme-color="dark"
 	/>
 
 	<div class="mt-6 flex items-center justify-between">

@@ -32,6 +32,10 @@ const colorTheme = defineMessages({
 		id: 'settings.display.theme.dark',
 		defaultMessage: 'Dark',
 	},
+	purple: {
+		id: 'settings.display.theme.purple',
+		defaultMessage: 'Purple',
+	},
 	oled: {
 		id: 'settings.display.theme.oled',
 		defaultMessage: 'OLED',
@@ -108,6 +112,10 @@ function getPreviewClass(option: T): string {
 
 		&.dark-mode {
 			@extend .dark-mode;
+		}
+
+		&.purple-mode {
+			@extend .purple-mode;
 		}
 
 		&.oled-mode {

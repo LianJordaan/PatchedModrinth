@@ -395,6 +395,21 @@ html {
 	--hover-brightness: 1.25;
 }
 
+.purple-mode {
+	@extend .dark-mode;
+
+	--surface-1: #0f0e18;
+	--surface-1-5: #14131f;
+	--surface-2: #191826;
+	--surface-2-5: #1e1c2d;
+	--surface-3: #232135;
+	--surface-4: #2c2942;
+	--surface-5: #3a3654;
+
+	--color-button-border: rgba(180, 160, 255, 0.14);
+	--color-ad: rgba(108, 75, 255, 0.15);
+}
+
 .oled-mode {
 	@extend .dark-mode;
 	--surface-1: #000000;
