@@ -1,0 +1,25 @@
+[package]
+name = "bytelauncher-shim"
+version = "1.0.0"
+edition = "2021"
+description = "Compatibility launcher installed as 'Modrinth App.exe' that starts ByteLauncher.exe"
+publish = false
+
+[[bin]]
+name = "shim"
+path = "src/main.rs"
+
+[build-dependencies]
+winres = "0.1"
+
+[profile.release]
+opt-level = "z"
+lto = true
+strip = true
+panic = "abort"
+codegen-units = 1
+
+# Standalone crate: deliberately NOT part of the parent Modrinth cargo
+# workspace, so building it never touches upstream's workspace and keeps the
+# fork patch thin. The empty table below makes this its own workspace root.
+[workspace]

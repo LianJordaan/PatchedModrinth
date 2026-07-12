@@ -22,6 +22,7 @@ on:
       - 'packages/utils/**'
       - 'packages/api-client/**'
       - 'packages/daedalus/**'
+      - 'fork/**'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -73,6 +74,34 @@ jobs:
             ls -la target/release/*.exe >&2 || true
             exit 1
           fi
+
+      - name: Build launcher shim
+        run: cargo build --release --manifest-path fork/shim/Cargo.toml
+
+      - name: Build installers (online + offline)
+        shell: pwsh
+        run: |
+          choco install nsis -y --no-progress
+          $makensis = "C:\Program Files (x86)\NSIS\makensis.exe"
+          Copy-Item fork/shim/target/release/shim.exe fork/installer/shim.exe -Force
+          Copy-Item apps/app/icons/icon.ico fork/installer/icon.ico -Force
+          Copy-Item dist/ByteLauncher.exe fork/installer/ByteLauncher.exe -Force
+          & $makensis "/DVERSION=0.0.0-dev" fork/installer/bytelauncher-installer.nsi
+          if ($LASTEXITCODE -ne 0) { throw "online installer build failed" }
+          & $makensis "/DOFFLINE=1" "/DVERSION=0.0.0-dev" fork/installer/bytelauncher-installer.nsi
+          if ($LASTEXITCODE -ne 0) { throw "offline installer build failed" }
+          Copy-Item fork/installer/ByteLauncher-Setup.exe dist/ -Force
+          Copy-Item fork/installer/ByteLauncher-Setup-Offline.exe dist/ -Force
+          Get-ChildItem dist/
+
+      - name: Upload installers
+        uses: actions/upload-artifact@v4
+        with:
+          name: bytelauncher-installers
+          path: |
+            dist/ByteLauncher-Setup.exe
+            dist/ByteLauncher-Setup-Offline.exe
+          if-no-files-found: error
 
       - name: Upload standalone exe
         uses: actions/upload-artifact@v4

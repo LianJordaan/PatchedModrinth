@@ -1,0 +1,7 @@
+# Build inputs copied in by CI at build time
+ByteLauncher.exe
+shim.exe
+icon.ico
+# Installer outputs
+ByteLauncher-Setup.exe
+ByteLauncher-Setup-Offline.exe

@@ -88,6 +88,25 @@ jobs:
           fi
           ls -la "dist/ByteLauncher.exe"
 
+      - name: Build launcher shim
+        run: cargo build --release --manifest-path fork/shim/Cargo.toml
+
+      - name: Build installers (online + offline)
+        shell: pwsh
+        run: |
+          choco install nsis -y --no-progress
+          $makensis = "C:\Program Files (x86)\NSIS\makensis.exe"
+          Copy-Item fork/shim/target/release/shim.exe fork/installer/shim.exe -Force
+          Copy-Item apps/app/icons/icon.ico fork/installer/icon.ico -Force
+          Copy-Item dist/ByteLauncher.exe fork/installer/ByteLauncher.exe -Force
+          & $makensis "/DVERSION=${{ steps.version.outputs.number }}" fork/installer/bytelauncher-installer.nsi
+          if ($LASTEXITCODE -ne 0) { throw "online installer build failed" }
+          & $makensis "/DOFFLINE=1" "/DVERSION=${{ steps.version.outputs.number }}" fork/installer/bytelauncher-installer.nsi
+          if ($LASTEXITCODE -ne 0) { throw "offline installer build failed" }
+          Copy-Item fork/installer/ByteLauncher-Setup.exe dist/ -Force
+          Copy-Item fork/installer/ByteLauncher-Setup-Offline.exe dist/ -Force
+          Get-ChildItem dist/
+
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
@@ -96,3 +115,5 @@ jobs:
           generate_release_notes: true
           files: |
             dist/ByteLauncher.exe
+            dist/ByteLauncher-Setup.exe
+            dist/ByteLauncher-Setup-Offline.exe
